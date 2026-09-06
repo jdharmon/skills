@@ -38,14 +38,9 @@ git diff --staged           # staged changes
 # Stage files
 git add <file>              # specific file
 git add .                   # everything in current directory
-git add -p                  # interactive hunk-by-hunk staging (recommended)
 
 # Commit
 git commit -m "short description of what changed"
-
-# Amend last commit (before pushing)
-git commit --amend --no-edit          # keep message, just add staged changes
-git commit --amend -m "new message"   # change message
 ```
 
 **Message length rules:**
@@ -54,7 +49,7 @@ git commit --amend -m "new message"   # change message
 
 **Hard rules:**
 - **MUST NOT** include Conventional Commit prefixes, e.g. `fix:`, `feat:`, `docs:`, etc. 
-- **MUST NOT** reference Claude, Anthropic, Co-Authored-By AI footers, or any AI tool in commit messages.
+- **MUST NOT** reference GPT, Gemini, Claude, Anthropic, Co-Authored-By AI footers, or any AI tool in commit messages.
 - **MUST NOT** stage or commit generated files, build artifacts, or `node_modules`. Check `.gitignore` covers them before committing.
 
 ---
@@ -118,13 +113,10 @@ If a command fails because git flow is not initialized, run `git flow init` firs
 # Features
 git flow feature start <name>        # branch off develop
 git flow feature finish <name>       # merge back to develop, delete branch
-git flow feature publish <name>      # push to remote
-git flow feature update              # pull changes from develop into current feature
 
 # Releases (version = semver without "v", e.g. 1.2.0)
 git flow release start <version>     # branch off develop
 git flow release finish <version>    # merge to master + develop, tag v<version>
-git flow release publish <version>   # push to remote
 
 # Hotfixes
 git flow hotfix start <name>         # branch off master
@@ -132,8 +124,6 @@ git flow hotfix finish <name>        # merge to master + develop, tag
 
 # Convenience (on current branch)
 git flow finish                      # finish whichever branch you're on
-git flow publish                     # publish current branch to remote
-git flow update                      # update current branch from its parent
 git flow overview                    # show all git-flow branches at a glance
 ```
 
