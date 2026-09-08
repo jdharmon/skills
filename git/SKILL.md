@@ -1,56 +1,52 @@
 ---
 name: git
 description: >
-  Use this skill for any git-related task: committing changes, pulling or pushing to a remote,
-  branching, merging, rebasing, resolving conflicts, viewing history/diffs, stashing, tagging,
-  resetting, or following a git flow branching strategy (feature, release, hotfix branches).
-  Trigger whenever the user mentions git commands, GitHub/GitLab workflows, "commit", "push",
-  "pull", "branch", "merge", "rebase", "stash", "tag", "cherry-pick", "conflict", "git flow",
-  "feature branch", "release branch", or "hotfix". Also trigger when the user asks how to undo
-  changes, compare versions, or manage a project's version history — even if they don't say "git"
-  explicitly.
+  Use this skill for project-specific git workflows: formatting commits, executing git flow operations (feature, release, hotfix), and determining version tags. Trigger on requests to commit changes, summarize branch changes, tag releases, or manage git-flow branches. Do NOT trigger for general git help or basic troubleshooting.
 ---
 
 # Git Skill
 
-Comprehensive guidance for common git operations, safe practices, and git flow branching strategy.
+Project-specific guidance for git operations, safe practices, and git flow branching strategy.
 
 ---
 
 ## Core Principles
 
-- **Always check status first**: `git status` before committing, `git log --oneline -5` to orient.
-- **Prefer explicit over implicit**: show full commands, not abbreviations.
-- **Safety net**: flag destructive operations (force push, hard reset, rebase on shared branches) with a warning.
-- **Context matters**: ask for the remote name (usually `origin`) and branch name if not obvious from context.
-- **Tags are the version source of truth**: version numbers are always derived from semver git tags (matching `vMAJOR.MINOR.PATCH`). Never hard-code versions in branch names, commit messages, or files without first reading the current version from tags. Use `git describe` or `git tag` to determine the current version before incrementing.
+- **Always check status first**: Run `git status` and `git diff` before committing.
+- **Prefer explicit over implicit**: Use full commands, not abbreviations.
+- **Tags are the version source of truth**: Version numbers are derived from semver git tags (`vMAJOR.MINOR.PATCH`). Never hard-code versions. Use `git describe` or `git tag` to read the current version.
 
 ---
 
 ## 1. Stage & Commit
 
-```bash
-# See what changed
-git status
-git diff                    # unstaged changes
-git diff --staged           # staged changes
+When committing work, base your commit message **only** on the staged and unstaged changes. 
 
-# Stage files
-git add <file>              # specific file
-git add .                   # everything in current directory
+### Commit Message Conventions
 
-# Commit
-git commit -m "short description of what changed"
+- **Simple change** (single area, obvious scope): Subject line only.
+- **Complex change** (multiple areas, non-obvious motivation): Subject line + blank line + a bulleted list summarizing each significant change.
+
+**Examples:**
+*Simple:* `Fixed grid styling. #123`
+*Complex:*
+```text
+Update signature field behavior. #123
+
+* Removed Sign button and moved onClick to grid
+* Updated grid text styling
 ```
 
-**Message length rules:**
-- **Simple change** (single area, obvious scope — e.g. button style tweak, typo fix): subject line only.
-- **Complex change** (multiple areas, non-obvious motivation, or behaviour change): subject + blank line + body explaining *why*.
+### Azure DevOps (ADO) Integration
 
-**Hard rules:**
-- **MUST NOT** include Conventional Commit prefixes, e.g. `fix:`, `feat:`, `docs:`, etc. 
-- **MUST NOT** reference GPT, Gemini, Claude, Anthropic, Co-Authored-By AI footers, or any AI tool in commit messages.
-- **MUST NOT** stage or commit generated files, build artifacts, or `node_modules`. Check `.gitignore` covers them before committing.
+To associate a commit with an ADO work item without automatically closing it, include the work item number with a pound sign in the subject line (e.g., `#123`).
+- Do **NOT** use keywords like `Fixes`, `Fix`, or `Fixed`, as this bypasses the "Resolved" state and closes the ticket prematurely.
+- **Multiple Items**: Separate with commas (e.g., `#123, #124`).
+
+### Hard rules
+- **No Prefixes**: Do NOT use Conventional Commit prefixes (e.g., `fix:`, `feat:`).
+- **No AI References**: Do NOT reference AI tools (GPT, Co-Authored-By) in messages.
+- **No Junk Files**: Do NOT stage generated files, build artifacts, or dependency directories (e.g., `node_modules`, `bin/`, `obj/`).
 
 ---
 
@@ -59,44 +55,28 @@ git commit -m "short description of what changed"
 **Tags matching `vMAJOR.MINOR.PATCH` (e.g. `v1.2.3`) are the single source of truth for version numbers.** Always read the current version from tags before creating a release or hotfix — never assume or hard-code it.
 
 ### Reading the current version
-
 ```bash
-# Most recent semver tag reachable from HEAD (includes commit distance + hash if not on a tag)
+# Most recent semver tag reachable from HEAD
 git describe --tags --match "v*"
 
-# Latest semver tag in the repo (regardless of HEAD position)
-git tag --list "v*" --sort=-version:refname | head -1
-
-# Confirm HEAD is exactly on a tag (exit code 0 = yes, non-zero = dirty/ahead)
-git describe --tags --exact-match --match "v*" 2>/dev/null
+# Latest semver tag in the repo (top result is the latest)
+git tag --list "v*" --sort=-version:refname
 ```
 
-### Creating and managing tags
+### Creating and pushing tags
+
+Version tags are created **automatically** when finishing a release or hotfix via `git flow`. Do NOT create version tags manually with `git tag`.
 
 ```bash
-git tag v1.0.0                       # lightweight tag (preferred — merge commit carries the message)
-git push origin v1.0.0               # push single tag
-git push origin --tags               # push all tags
-git tag -d v1.0.0                    # delete local tag
-git push origin --delete v1.0.0      # delete remote tag
+# Push tags to remote after finishing a release/hotfix
+git push origin --tags
 ```
-
-> **Note:** `git describe` requires the `--tags` flag to find lightweight tags — the version-reading commands above already include it.
 
 ---
 
 ## 3. Git Flow Branching Strategy
 
-Use the `git-flow` CLI (`git-flow-next` installed at `/usr/local/bin/git-flow`) for all git flow operations.
-
-### Initialization
-
-```bash
-git flow init            # interactive setup
-git flow init -d --tag v # accept defaults (master/develop, feature/release/hotfix/support prefixes, v tag prefix)
-```
-
-If a command fails because git flow is not initialized, run `git flow init` first, then re-run the original command.
+Use the `git flow` CLI extension for all git flow operations. If a command fails because git flow is not initialized, run `git flow init` first.
 
 ### Branch Structure
 | Branch | Purpose | Merges into |
@@ -108,7 +88,6 @@ If a command fails because git flow is not initialized, run `git flow init` firs
 | `hotfix/*` | Emergency prod fixes | `master` + `develop` |
 
 ### Common Commands
-
 ```bash
 # Features
 git flow feature start <name>        # branch off develop
@@ -121,26 +100,4 @@ git flow release finish <version>    # merge to master + develop, tag v<version>
 # Hotfixes
 git flow hotfix start <name>         # branch off master
 git flow hotfix finish <name>        # merge to master + develop, tag
-
-# Convenience (on current branch)
-git flow finish                      # finish whichever branch you're on
-git flow overview                    # show all git-flow branches at a glance
 ```
-
-**Tags are the version source of truth.** Always read the current version before starting a release or hotfix:
-
-```bash
-git tag --list "v*" --sort=-version:refname | head -1
-```
-
----
-
-## 11. Common Troubleshooting
-
-| Problem | Fix |
-|--------|-----|
-| Merge conflict | Edit conflicted files, `git add <file>`, then `git commit` |
-| Accidentally committed to wrong branch | `git cherry-pick <hash>` onto correct branch, then `git reset --hard HEAD~1` on wrong branch |
-| Need to move uncommitted changes to new branch | `git stash` → `git switch -c new-branch` → `git stash pop` |
-| Detached HEAD | `git switch -c recovery-branch` to save work, or `git switch master` to discard |
-| Diverged from remote | `git pull --rebase origin <branch>` usually resolves it cleanly |
