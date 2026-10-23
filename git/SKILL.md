@@ -76,7 +76,7 @@ git push origin --tags
 
 ## 3. Git Flow Branching Strategy
 
-Use the `git flow` CLI extension for all git flow operations. If a command fails because git flow is not initialized, run `git flow init` first.
+Use the `git flow` CLI extension for all git flow operations. If a command fails because git flow is not initialized, run `git flow init -d -t v` first.
 
 ### Branch Structure
 | Branch | Purpose | Merges into |
