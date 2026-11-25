@@ -1,6 +1,6 @@
 ---
 name: prompt-engineering
-description: Write, audit, and port prompts using each vendor's official prompting guidance. Use this whenever the user is working on a prompt, system prompt, agent instruction file, AGENTS.md/CLAUDE.md, tool description, or LLM-facing template — including when they say a model "isn't listening," is too verbose or too terse, over- or under-uses tools, ignores format instructions, or when they're switching a prompt from one model or provider to another. Also use when the user asks how to prompt a specific model (Opus, Sonnet, Haiku, Fable, GPT Sol/Terra/Luna, Astra, Gemini Pro/Flash, Gemma) or asks you to "improve this prompt."
+description: Write, audit, and port prompts using each vendor's official prompting guidance. Use this whenever the user is working on a prompt, system prompt, agent instruction file, AGENTS.md/CLAUDE.md, tool description, or LLM-facing template — including when they say a model "isn't listening," is too verbose or too terse, over- or under-uses tools, ignores format instructions, or when they're switching a prompt from one model or provider to another. Also use when the user asks how to prompt a specific model (Opus, Sonnet, Haiku, Fable, GPT Sol/Terra/Luna, Astra, Gemini Carbon/Neon/Hydrogen/Argon, Gemini Pro/Flash, Gemma) or asks you to "improve this prompt."
 ---
 
 # Prompt engineering
@@ -44,7 +44,8 @@ Then load the references. Read **both** the family file and the model file:
 | Claude Haiku 4.5, Opus 4.x, Sonnet 4.x | `references/anthropic/family.md` | (family file covers these) |
 | GPT-5.6 Sol / Terra / Luna | `references/openai/family.md` | `references/openai/gpt-5-6.md` |
 | GPT-6 Astra, GPT-5.x and earlier | `references/openai/family.md` | (fetch live docs — see below) |
-| Gemini 3.x Pro / Flash | `references/google/gemini-family.md` | `references/google/gemini-3-flash.md` |
+| Gemini 4 Carbon / Neon / Hydrogen / Argon | `references/google/gemini-family.md` | `references/google/gemini-4.md` |
+| Gemini 3.x Flash / Flash-Lite / Pro | `references/google/gemini-family.md` | `references/google/gemini-3-flash.md` |
 | Gemma 4 (local, LM Studio / Ollama / llama.cpp) | — | `references/google/gemma-4.md` |
 | Anything else | Use [universal principles](#universal-principles) and say the guidance is generic |
 
@@ -54,7 +55,7 @@ recognise, fetch the vendor's live guidance before answering. Canonical entry po
 
 - `https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices`
 - `https://developers.openai.com/api/docs/guides/latest-model`
-- `https://ai.google.dev/gemini-api/docs/prompting-strategies`
+- `https://aistudio.google.com/docs/prompting-strategies.md` and `https://aistudio.google.com/docs/latest-model.md` (index: `https://aistudio.google.com/llms.txt`; live MCP: `https://gemini-api-docs-mcp.dev`)
 
 ## Universal principles
 
@@ -158,10 +159,13 @@ causes of "the model stopped listening":
   inconsistent formatting, user input not fenced off from instructions.
 - **Parameter-shaped problems.** Verbosity, reasoning depth, and tool eagerness often
   belong in `effort` / `reasoning.effort` / `thinking_level` / `text.verbosity`, not in
-  prose. Check the references for deprecated parameters that now hard-error
-  (`budget_tokens`, `temperature` on some models, `top_k`/`top_p` on Gemini 3+).
-- **Deprecated mechanics.** Assistant prefill, `candidate_count`, prefilled model turns,
-  history rewriting that invalidates thinking blocks.
+  prose. Check the references for deprecated parameters that warn or hard-error
+  (`budget_tokens` on Claude 5, `thinking_budget` on Gemini 3+, `temperature` on thinking
+  models, `temperature`/`top_p`/`top_k` on Gemini 3.6+ and Gemini 4, and explicit
+  `cached_content` on Gemini 4).
+- **Deprecated mechanics.** Assistant prefill (Claude 5, and HTTP `400` for prefilled
+  `model` turns on Gemini 3.6+ and Gemini 4), `candidate_count`, and history rewriting
+  that strips or invalidates thinking blocks / thought signatures.
 
 Report findings as: what's wrong, why it's wrong on *this* model, and the replacement
 text. Prefer deletions — leaner prompts measurably outperform padded ones.
