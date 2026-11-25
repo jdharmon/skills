@@ -74,30 +74,58 @@ git push origin --tags
 
 ---
 
-## 3. Git Flow Branching Strategy
+## 3. Git Flow Branching Strategy (`git-flow-next`)
 
-Use the `git flow` CLI extension for all git flow operations. If a command fails because git flow is not initialized, run `git flow init -d -t v` first.
+Use the `git flow` CLI (`git-flow-next`) for all git flow operations. If a command fails because git flow is not initialized, run `git flow init -d -t v` first (add `-M master` if the repo uses `master` instead of `main` as its production branch).
+
+> **Important (`git-flow-next` differences):**
+> - **`git flow log` is NOT supported.** Never run `git flow log` or `git flow <type> log`.
+> - Use `git flow overview` to inspect configured base branches, topic branch prefixes, and active topic branches.
+> - To view or summarize changes on a topic branch, compare against its base branch using standard git commands (e.g., `git log develop..HEAD` or `git diff develop...HEAD`).
 
 ### Branch Structure
 | Branch | Purpose | Merges into |
 |--------|---------|-------------|
-| `master` | Production code | — |
-| `develop` | Integration branch | `master` (via release) |
+| `master` / `main` | Production code | — |
+| `develop` | Integration branch | `master` / `main` (via release) |
 | `feature/*` | New features | `develop` |
-| `release/*` | Release prep & bugfixes | `master` + `develop` |
-| `hotfix/*` | Emergency prod fixes | `master` + `develop` |
+| `bugfix/*` | Bugfixes for next release | `develop` |
+| `release/*` | Release prep & bugfixes | `master` / `main` + `develop` |
+| `hotfix/*` | Emergency prod fixes | `master` / `main` + `develop` |
 
 ### Common Commands
 ```bash
+# Inspect configuration and active topic branches
+git flow overview
+
 # Features
 git flow feature start <name>        # branch off develop
 git flow feature finish <name>       # merge back to develop, delete branch
 
 # Releases (version = semver without "v", e.g. 1.2.0)
 git flow release start <version>     # branch off develop
-git flow release finish <version>    # merge to master + develop, tag v<version>
+git flow release finish <version> -m "v<version>"  # merge to prod + develop, tag v<version>
 
 # Hotfixes
-git flow hotfix start <name>         # branch off master
-git flow hotfix finish <name>        # merge to master + develop, tag
+git flow hotfix start <version>      # branch off master/main
+git flow hotfix finish <version> -m "v<version>"   # merge to prod + develop, tag v<version>
+
+# Shorthand operations on the currently checked-out topic branch
+git flow update                      # merge/rebase latest changes from parent branch
+git flow finish                      # finish the current topic branch
+git flow publish                     # push current topic branch to remote
+git flow delete                      # delete the current topic branch
+```
+
+### Summarizing Branch Changes
+Because `git-flow-next` does not include `git flow log`, inspect topic branch history using standard `git` commands against the parent branch (`develop` for `feature/*`, `bugfix/*`, `release/*`; `master` or `main` for `hotfix/*`):
+```bash
+# Check which base/parent branch the current topic branch targets
+git flow overview
+
+# List commits unique to the current topic branch
+git log develop..HEAD --oneline
+
+# View full diff introduced by the current topic branch since it diverged
+git diff develop...HEAD
 ```
